@@ -9,42 +9,86 @@
 import Foundation
 import UIKit
 
+struct Image {
+    var imageData: Data?
+    let link: URL
+    let height: Int
+    let width: Int
+    let thumbnailLink: URL
+    let thumbnailHeight: Int
+    let thumbnailWidth: Int
+}
+
 class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
+    @IBOutlet weak var searchField: UITextField!
     
+    @IBAction func searchButton(_ sender: UIButton) {
+        images = []
+        imagesForTableView = []
+        search(startNumber: 1)
+    }
     @IBOutlet weak var tableView: UITableView!
     
-    var images:[Data] = []
-    var urls:[String] = ["https://www.petmd.com/sites/default/files/Senior-Cat-Care-2070625.jpg","https://upload.wikimedia.org/wikipedia/commons/6/66/An_up-close_picture_of_a_curious_male_domestic_shorthair_tabby_cat.jpg","https://www.catster.com/wp-content/uploads/2018/05/A-gray-cat-crying-looking-upset.jpg","https://www.humanesociety.org/sites/default/files/styles/768x326/public/2018/08/kitten-440379.jpg?h=f6a7b1af&itok=vU0J0uZR","https://img.washingtonpost.com/wp-apps/imrs.php?src=https://img.washingtonpost.com/rf/image_960w/2010-2019/WashingtonPost/2016/05/05/Interactivity/Images/iStock_000001440835_Large1462483441.jpg&w=1484","https://media.mnn.com/assets/images/2018/07/cat_eating_fancy_ice_cream.jpg.1080x0_q100_crop-scale.jpg","https://www.sciencenews.org/sites/default/files/2019/07/main/articles/072319_ee_cat-allergy_feat.jpg","https://cdn.britannica.com/67/197567-131-1645A26E.jpg","https://images-production.freetls.fastly.net/uploads/posts/off_site_promo_image/166842/why-do-cats-meow.jpg?auto=compress&crop=top&fit=crop&q=55&w=1200&h=900","https://cdn.theatlantic.com/assets/media/img/mt/2017/06/shutterstock_319985324/lead_720_405.jpg?mod=1533691890","https://media.vanityfair.com/photos/5cdecf8e1d6b8739f44c2ef6/master/pass/Grumpy-Cat-Obit.jpg","https://i2.wp.com/metro.co.uk/wp-content/uploads/2019/07/standing-cats-comp.png?quality=90&strip=all&zoom=1&resize=964%2C541&ssl=1"]
+    var images:[Image] = []
+    var imagesForTableView: [Image] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.delegate = self
         tableView.dataSource = self
-        getAllTheData(urls: urls)
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return images.count
+        return imagesForTableView.count
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        let currentImage = UIImage(data: images[indexPath.row])
-        let imageCrop = currentImage!.getCropRatio()
-        return tableView.frame.width / imageCrop
+        
+        if let currentImage = UIImage(data: imagesForTableView[indexPath.row].imageData!){
+            let imageRatio = currentImage.getCropRatio()
+            
+            return tableView.frame.width / imageRatio
+        } else {
+            return 2
+        }
     }
-    
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TvCell") as! TvCell
-        let cellTask = images[indexPath.row]
-        cell.setCellImage(imageData: cellTask)
+        let cellTask = imagesForTableView[indexPath.row]
+        if let image = cellTask.imageData  {
+            cell.setCellImage(imageData: image)
+        }
         return cell
     }
     
-    func getAllTheData(urls:[String]) {
-        for url in urls {
-            runSession(url: url)
-        }
+//    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+//        let lastCell = imagesForTableView.count - 1
+//
+//        let expectedNumberOfImages = 10
+//        let numberOfImagesCheck = imagesForTableView.count % expectedNumberOfImages == 0
+//        if indexPath.row == lastCell {
+//            if numberOfImagesCheck == true {
+//                self.search(startNumber: imagesForTableView.count)
+//            }
+//        }
+//    }
+    
+    func prepareImagesForTableView() {
+        imagesForTableView = images.filter({return $0.imageData != nil})
     }
+    
+    func search(startNumber: Int) {
+        
+        var search: NSString = ""
+        search = searchField.text! as NSString
+        //let searchFiltered = NSString.addingPercentEncoding(search)
+        let numberSearched: Int = 10
+        let url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyCOGUCrR0Mh2mzZ8UNP2-Wis2TEdSdLtQk&searchType=image&cx=013553353415577249476:qm1ft4ixm8q&q=\(String(describing: search))&num=\(numberSearched)&start=\(startNumber)"
+        
+        runSession(url: url)
+    }
+    
     
     func runSession(url: String) {
         guard let currentUrl = URL(string: url ) else{
@@ -56,13 +100,71 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             guard let data = data else{
                 return
             }
-            self.images.append(data)
+            if error != nil {
+                print("there is an error")
+            }
+            
+            do {
+                let jsonData = try JSONSerialization.jsonObject(with: data, options: []) as! [String:Any]
+                
+                guard let items = jsonData["items"] as! [Any]? else{
+                    print("could not turn the data into an array")
+                    return
+                }
+                self.getImageFromItem(array: items)
+                
+                
+                
+                DispatchQueue.main.async {
+                    for (index, image) in self.images.enumerated() {
+                        self.getImageFromUrl(url: image.link, indexPath: index )
+                    }
+                }
+            } catch {
+                print("we couldn't get the data")
+                return
+            }
+        }
+        session.resume()
+    }
+    
+    func getImageFromUrl(url: URL, indexPath: Int) {
+        let request = URLRequest(url: url)
+        let session = URLSession.shared.dataTask(with: request) { data, response, error in
+            
+            if error != nil {
+                print("error: couldn't getthe image data")
+            }
+            
+            guard let data = data else{
+                return
+            }
             DispatchQueue.main.async {
+                self.images[indexPath].imageData = data
+                self.prepareImagesForTableView()
                 self.tableView.reloadData()
             }
         }
         session.resume()
     }
+    
+    func getImageFromItem(array:[Any]) {
+        
+        for rawObject in array {
+            let object = rawObject as! [String:Any]
+            let imageUrl = URL(string: object["link"] as! String)!
+            let imageAtributes = object["image"] as! [String:Any]
+            let imageHeight = imageAtributes["height"] as! Int
+            let imageWidth = imageAtributes["width"] as! Int
+            let thumbnailImage = URL(string: imageAtributes["thumbnailLink"] as! String)!
+            let thumbnailHeight = imageAtributes["thumbnailHeight"] as! Int
+            let thumbnailWidth = imageAtributes["thumbnailWidth"] as! Int
+            
+            images.append(Image(imageData: nil, link: imageUrl, height: imageHeight, width: imageWidth, thumbnailLink: thumbnailImage, thumbnailHeight: thumbnailHeight, thumbnailWidth: thumbnailWidth))
+        }
+    }
+    
+    
     
 }
 

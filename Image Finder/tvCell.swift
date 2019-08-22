@@ -14,6 +14,7 @@ class TvCell: UITableViewCell {
     @IBOutlet weak var cellImage: UIImageView!
     
     func setCellImage(imageData: Data) {
-    cellImage.image = UIImage(data: imageData)
+        cellImage.translatesAutoresizingMaskIntoConstraints = false
+        cellImage.image = UIImage(data: imageData)
     }
 }
