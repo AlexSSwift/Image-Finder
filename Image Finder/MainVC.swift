@@ -25,12 +25,19 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     @IBAction func searchButton(_ sender: UIButton) {
         images = []
         imagesForTableView = []
+        imageLoadingCount = 0
+        if searchField.text != "" {
+            searchFieldFilled = true
+        }
         search(startNumber: 1)
     }
     @IBOutlet weak var tableView: UITableView!
     
     var images:[Image] = []
     var imagesForTableView: [Image] = []
+    var imageLoadingCount: Int = 0
+    var imageLoading: Bool = false
+    var searchFieldFilled: Bool = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -62,33 +69,25 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         return cell
     }
     
-//    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-//        let lastCell = imagesForTableView.count - 1
-//
-//        let expectedNumberOfImages = 10
-//        let numberOfImagesCheck = imagesForTableView.count % expectedNumberOfImages == 0
-//        if indexPath.row == lastCell {
-//            if numberOfImagesCheck == true {
-//                self.search(startNumber: imagesForTableView.count)
-//            }
-//        }
-//    }
-    
-    func prepareImagesForTableView() {
-        imagesForTableView = images.filter({return $0.imageData != nil})
+      func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        let lastCell = imagesForTableView.count 
+
+        if indexPath.row == lastCell && imageLoading == false && searchFieldFilled == true && indexPath.row != 0 {
+            self.imageLoading = true
+            self.search(startNumber: imagesForTableView.count + 1)
+        }
     }
-    
+
     func search(startNumber: Int) {
-        
-        var search: NSString = ""
-        search = searchField.text! as NSString
-        //let searchFiltered = NSString.addingPercentEncoding(search)
+        imageLoading = true
+        var search: String = ""
+        search = searchField.text!
+        let searchFiltered = search.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!
         let numberSearched: Int = 10
-        let url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyCOGUCrR0Mh2mzZ8UNP2-Wis2TEdSdLtQk&searchType=image&cx=013553353415577249476:qm1ft4ixm8q&q=\(String(describing: search))&num=\(numberSearched)&start=\(startNumber)"
+        let url = "https://www.googleapis.com/customsearch/v1?key=AIzaSyCOGUCrR0Mh2mzZ8UNP2-Wis2TEdSdLtQk&searchType=image&cx=013553353415577249476:qm1ft4ixm8q&q=\(searchFiltered)&num=\(numberSearched)&start=\(startNumber)"
         
         runSession(url: url)
     }
-    
     
     func runSession(url: String) {
         guard let currentUrl = URL(string: url ) else{
@@ -113,8 +112,6 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
                 }
                 self.getImageFromItem(array: items)
                 
-                
-                
                 DispatchQueue.main.async {
                     for (index, image) in self.images.enumerated() {
                         self.getImageFromUrl(url: image.link, indexPath: index )
@@ -133,7 +130,7 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         let session = URLSession.shared.dataTask(with: request) { data, response, error in
             
             if error != nil {
-                print("error: couldn't getthe image data")
+                print("error: couldn't get the image data")
             }
             
             guard let data = data else{
@@ -141,11 +138,24 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             }
             DispatchQueue.main.async {
                 self.images[indexPath].imageData = data
-                self.prepareImagesForTableView()
-                self.tableView.reloadData()
+                self.imageLoadingCount += 1
+                if self.imageLoadingCount == 10 {
+                    self.prepareImagesForTableView()
+                }
             }
         }
         session.resume()
+    }
+    
+    func prepareImagesForTableView() {
+        //imagesForTableView = images.filter({return $0.imageData != nil})
+        for image in images {
+            imagesForTableView.append(image)
+        }
+        images = []
+        tableView.reloadData()
+        imageLoadingCount = 0
+        imageLoading = false
     }
     
     func getImageFromItem(array:[Any]) {
@@ -163,7 +173,6 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
             images.append(Image(imageData: nil, link: imageUrl, height: imageHeight, width: imageWidth, thumbnailLink: thumbnailImage, thumbnailHeight: thumbnailHeight, thumbnailWidth: thumbnailWidth))
         }
     }
-    
     
     
 }
