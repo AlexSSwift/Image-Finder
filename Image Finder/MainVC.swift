@@ -19,18 +19,19 @@ struct Image {
     let thumbnailWidth: Int
 }
 
-class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
+class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate{
     @IBOutlet weak var searchField: UITextField!
-    
+
     @IBAction func searchButton(_ sender: UIButton) {
-        images = []
-        imagesForTableView = []
-        imageLoadingCount = 0
-        if searchField.text != "" {
-            searchFieldFilled = true
-        }
-        search(startNumber: 1)
+        newSearch()
     }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        newSearch()
+        return true
+    }
+    
     @IBOutlet weak var tableView: UITableView!
     
     var images:[Image] = []
@@ -43,6 +44,7 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         super.viewDidLoad()
         tableView.delegate = self
         tableView.dataSource = self
+        searchField.delegate = self
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -70,14 +72,26 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     }
     
       func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-        let lastCell = imagesForTableView.count 
+        let lastCell = imagesForTableView.count - 1
 
         if indexPath.row == lastCell && imageLoading == false && searchFieldFilled == true && indexPath.row != 0 {
             self.imageLoading = true
             self.search(startNumber: imagesForTableView.count + 1)
         }
     }
-
+ 
+    func newSearch() {
+        images = []
+        imagesForTableView = []
+        tableView.reloadData()
+        imageLoadingCount = 0
+        if searchField.text != "" {
+            searchFieldFilled = true
+        }
+        search(startNumber: 1)
+        view.endEditing(true)
+    }
+    
     func search(startNumber: Int) {
         imageLoading = true
         var search: String = ""
@@ -151,9 +165,12 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
         //imagesForTableView = images.filter({return $0.imageData != nil})
         for image in images {
             imagesForTableView.append(image)
+            let indexPath = IndexPath(row: imagesForTableView.count - 1, section: 0)
+            tableView.beginUpdates()
+            tableView.insertRows(at: [indexPath], with: .none)
+            tableView.endUpdates()
         }
         images = []
-        tableView.reloadData()
         imageLoadingCount = 0
         imageLoading = false
     }

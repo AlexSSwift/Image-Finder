@@ -9,12 +9,14 @@
 import Foundation
 import UIKit
 
-class TvCell: UITableViewCell {
+class TvCell: UITableViewCell, UIScrollViewDelegate {
     
     @IBOutlet weak var cellImage: UIImageView!
     
     func setCellImage(imageData: Data) {
         cellImage.translatesAutoresizingMaskIntoConstraints = false
         cellImage.image = UIImage(data: imageData)
+       
     }
+
 }
