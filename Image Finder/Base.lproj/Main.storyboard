@@ -29,19 +29,29 @@
                                             <rect key="frame" x="0.0" y="0.0" width="414" height="118.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="N4U-Oe-zdA">
+                                                <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="wtG-Y0-TfI">
                                                     <rect key="frame" x="0.0" y="0.0" width="414" height="119"/>
+                                                </scrollView>
+                                                <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="N4U-Oe-zdA">
+                                                    <rect key="frame" x="0.0" y="0.0" width="414" height="118.5"/>
                                                 </imageView>
                                             </subviews>
                                             <constraints>
-                                                <constraint firstAttribute="trailing" secondItem="N4U-Oe-zdA" secondAttribute="trailing" id="Wub-Ra-daS"/>
-                                                <constraint firstItem="N4U-Oe-zdA" firstAttribute="leading" secondItem="FQD-tU-Uce" secondAttribute="leading" id="YDy-kq-Mlq"/>
-                                                <constraint firstItem="N4U-Oe-zdA" firstAttribute="top" secondItem="FQD-tU-Uce" secondAttribute="top" id="g1L-Bb-rib"/>
-                                                <constraint firstItem="N4U-Oe-zdA" firstAttribute="centerY" secondItem="FQD-tU-Uce" secondAttribute="centerY" id="tYI-1E-c8S"/>
+                                                <constraint firstItem="N4U-Oe-zdA" firstAttribute="leading" secondItem="wtG-Y0-TfI" secondAttribute="leading" id="RyV-Sj-HTL"/>
+                                                <constraint firstItem="N4U-Oe-zdA" firstAttribute="top" secondItem="FQD-tU-Uce" secondAttribute="top" id="ULv-6j-ja8"/>
+                                                <constraint firstItem="N4U-Oe-zdA" firstAttribute="trailing" secondItem="wtG-Y0-TfI" secondAttribute="trailing" id="Y7Y-1C-GR7"/>
+                                                <constraint firstItem="N4U-Oe-zdA" firstAttribute="centerY" secondItem="FQD-tU-Uce" secondAttribute="centerY" id="qDD-BT-znL"/>
                                             </constraints>
                                         </tableViewCellContentView>
+                                        <constraints>
+                                            <constraint firstItem="wtG-Y0-TfI" firstAttribute="leading" secondItem="fBF-J1-rQs" secondAttribute="leading" id="7lk-Ff-sh0"/>
+                                            <constraint firstAttribute="bottom" secondItem="wtG-Y0-TfI" secondAttribute="bottom" id="9tI-NZ-Ngz"/>
+                                            <constraint firstItem="wtG-Y0-TfI" firstAttribute="top" secondItem="fBF-J1-rQs" secondAttribute="top" id="SHb-7v-fjv"/>
+                                            <constraint firstAttribute="trailing" secondItem="wtG-Y0-TfI" secondAttribute="trailing" id="t2b-po-WJm"/>
+                                        </constraints>
                                         <connections>
                                             <outlet property="cellImage" destination="N4U-Oe-zdA" id="5Jy-Lf-kOi"/>
+                                            <outlet property="scrollView" destination="wtG-Y0-TfI" id="wHK-1E-VRD"/>
                                         </connections>
                                     </tableViewCell>
                                 </prototypes>

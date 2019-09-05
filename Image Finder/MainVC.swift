@@ -45,6 +45,7 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
         tableView.delegate = self
         tableView.dataSource = self
         searchField.delegate = self
+        
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -61,13 +62,17 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
             return 2
         }
     }
-
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TvCell") as! TvCell
         let cellTask = imagesForTableView[indexPath.row]
         if let image = cellTask.imageData  {
             cell.setCellImage(imageData: image)
         }
+        cell.scrollView.delegate = cell
+        cell.scrollView.minimumZoomScale = 1.0
+        cell.scrollView.maximumZoomScale = 10.0
+
         return cell
     }
     
@@ -79,7 +84,8 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
             self.search(startNumber: imagesForTableView.count + 1)
         }
     }
- 
+    
+
     func newSearch() {
         images = []
         imagesForTableView = []
@@ -191,7 +197,6 @@ class MainVC: UIViewController, UITableViewDelegate, UITableViewDataSource, UITe
         }
     }
     
-    
 }
 
 extension UIImage {
@@ -200,3 +205,6 @@ extension UIImage {
         return widthRatio
     }
 }
+
+
+
